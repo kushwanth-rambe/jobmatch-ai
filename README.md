@@ -8,23 +8,50 @@ The product specification is in [`JOBMATCH_AI_PRODUCT_SPEC.md`](./JOBMATCH_AI_PR
 
 ## Status
 
-**Release 1 · Milestone M0 — project foundation.** The landing page is built. The journey screens are placeholders that describe what each screen will contain; there is no AI analysis yet.
+**Release 1 · Milestone M2 — Add Job Description and JobMatch Analysis.**
 
 | Route | Screen | Built in |
 |---|---|---|
 | `/` | Landing page | M0 ✅ |
-| `/profile` | Step 1 · Professional Profile | M1 |
-| `/analyze` | Step 2 · Add Job Description | M2 |
-| `/opportunity/[id]` | Steps 3 & 4 · JobMatch Analysis & Application Decision | M2 (analysis), M3 (decision) |
+| `/profile` | Step 1 · Professional Profile (saved in this browser) | M1 ✅ |
+| `/analyze` | Step 2 · Add Job Description (paste text) | M2 ✅ |
+| `/opportunity/[id]` | Steps 3 & 4 · JobMatch Analysis & Application Decision | M2 ✅ analysis · M3 decision |
+| `/api/analyze` | Server route that calls Gemini (API key stays on the server) | M2 ✅ |
+
+Public job-URL fetching is planned for M5; M2 uses pasted job descriptions only.
+
+## How the analysis works
+
+1. The browser checks for a saved result for the same profile + job description (no API call if found).
+2. Otherwise it sends the profile and job description to `/api/analyze`.
+3. The server makes **one** Gemini call with a strict JSON output format (retrying once only if the reply is unusable).
+4. App code — not the AI — then checks the result: every "matching" skill must be backed by words from the profile (otherwise it is marked *unproven*), hiring-prediction wording is removed, and the Strong / Partial / Limited level is calculated from the counts.
+5. The result and the original job description are saved in the browser only.
+
+The analysis compares the profile with the job description. It never predicts hiring success.
 
 ## Tech stack
 
 - [Next.js 16](https://nextjs.org/) (App Router) with TypeScript
 - [Tailwind CSS 4](https://tailwindcss.com/) for styling
-- ESLint for code checks
+- [Gemini API](https://ai.google.dev/) via `@google/genai`, default model `gemini-3.1-flash-lite`
+- [Zod](https://zod.dev/) to define and check the AI's JSON output
+- ESLint; tests with Node's built-in test runner
 - Deployed on [Vercel](https://vercel.com/)
 
-Not used yet (added in later milestones per the spec): Gemini API (M2), Supabase and sign-in (Release 2 only).
+Not used (Release 2 only): Supabase and sign-in.
+
+## Environment variables
+
+Server-side only — never prefix them with `NEXT_PUBLIC_`. See [`.env.example`](./.env.example).
+
+| Name | Required | Purpose |
+|---|---|---|
+| `GEMINI_API_KEY` | Yes, for analysis | Google AI Studio API key. Without it the app still runs and shows a clear "not set up" message instead of analysing. |
+| `GEMINI_MODEL` | No | Defaults to `gemini-3.1-flash-lite`. Change it to compare models. |
+| `GEMINI_THINKING_LEVEL` | No | `minimal`, `low`, `medium` or `high`. Defaults to `low`. |
+
+For local development put them in `.env.local` (ignored by Git). On Vercel add them under **Project → Settings → Environment Variables**.
 
 ## Run it locally
 
@@ -43,6 +70,10 @@ Then open http://localhost:3000.
 ## Checks
 
 ```bash
+npm test
+```
+
+```bash
 npm run lint
 ```
 
@@ -50,26 +81,34 @@ npm run lint
 npm run build
 ```
 
+`npm test` never calls the real API. To run the **live** check of the five sample job descriptions (small real API cost), start the app with `GEMINI_API_KEY` set, then:
+
+```bash
+npm run check:live
+```
+
 ## Project structure
 
 ```
 app/
-  layout.tsx                 Shared page frame: header, footer, fonts, page titles
-  globals.css                Tailwind setup and colour palette (light + dark)
-  icon.svg                   Browser tab icon
-  page.tsx                   Landing page
-  profile/page.tsx           Step 1 · Professional Profile
-  analyze/page.tsx           Step 2 · Add Job Description
-  opportunity/[id]/page.tsx  Steps 3 & 4 · Analysis and Decision
+  layout.tsx                  Shared page frame: header, footer, fonts, page titles
+  page.tsx                    Landing page
+  profile/page.tsx            Step 1 · Professional Profile
+  analyze/page.tsx            Step 2 · Add Job Description
+  opportunity/[id]/page.tsx   Steps 3 & 4 · Analysis (Decision in M3)
+  api/analyze/route.ts        Server route: runs one analysis
 components/
-  SiteHeader.tsx, SiteFooter.tsx, Logo.tsx
-  JourneySteps.tsx           Progress bar for the four-step journey
-  ScreenPlaceholder.tsx      Shared layout for screens not built yet
+  profile/ProfileForm.tsx     Profile form
+  job/AddJobForm.tsx          Job description form
+  analysis/AnalysisView.tsx   Analysis results
+  JourneySteps.tsx, SiteHeader.tsx, SiteFooter.tsx, Logo.tsx
 lib/
-  journey.ts                 The four journey steps
-  types.ts                   Data shapes from the spec (profile, analysis, opportunity)
+  profile.ts                  Profile rules and browser storage
+  job.ts                      Job description rules and cache key
+  opportunities.ts            Analysed jobs in browser storage
+  analysis/                   Prompt, output schema, checks, runner, request handler, cost
+  server/gemini.ts            Gemini client (server only)
+  types.ts, journey.ts
+scripts/live-check.mts        Manual live check against Gemini
+tests/                        Unit tests and sample job descriptions (test data only)
 ```
-
-## Deploy to Vercel
-
-Import this repository at [vercel.com/new](https://vercel.com/new). No settings or environment variables are needed for M0.

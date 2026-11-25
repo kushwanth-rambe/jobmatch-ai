@@ -1,0 +1,28 @@
+Technical Product Manager – Developer Platform & APIs
+Stratus Cloud · Hyderabad, India (Hybrid) or Remote within India
+
+Stratus Cloud provides cloud infrastructure to 20,000 businesses. Our Developer Platform team builds the public APIs, SDKs and developer portal used by our customers' engineering teams. We are hiring a Technical Product Manager to lead the API platform.
+
+What you'll do
+- Own the roadmap for our public REST APIs, SDKs and developer documentation.
+- Work with engineering architects to make decisions on API design, versioning, authentication and rate limiting.
+- Write detailed technical requirements and API specifications (OpenAPI).
+- Measure developer experience using metrics such as time to first API call and API error rates.
+- Talk to customers' developers to understand their needs and pain points.
+- Coordinate releases across multiple engineering teams.
+
+Requirements
+- 7+ years of experience, including at least 4 years as a product manager for technical or platform products.
+- A computer science or engineering background, or equivalent hands-on software development experience.
+- Deep understanding of REST APIs, authentication (OAuth 2.0) and cloud architecture.
+- Experience writing technical specifications and working closely with engineering teams.
+- Strong data skills; SQL required.
+
+Preferred qualifications
+- Experience with developer tools, SDKs or API management platforms.
+- Knowledge of Kubernetes or major cloud providers (AWS, Azure, GCP).
+- Experience with usage-based pricing for APIs.
+
+Candidates must be able to own outcomes end to end and drive alignment across the organisation.
+
+We offer a competitive package, a cloud certification budget and flexible hours. Stratus Cloud is an equal opportunity employer.

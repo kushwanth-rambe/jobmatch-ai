@@ -1,24 +1,23 @@
 import type { Metadata } from "next";
-import { ScreenPlaceholder } from "@/components/ScreenPlaceholder";
+import { JourneySteps } from "@/components/JourneySteps";
+import { AddJobScreen } from "@/components/job/AddJobForm";
 
 export const metadata: Metadata = { title: "Add Job Description" };
 
 export default function AnalyzePage() {
   return (
-    <ScreenPlaceholder
-      steps={[2]}
-      title="Add Job Description"
-      intro="Paste the full job description from any job site. Add the original link so you can open the listing again later."
-      milestone="Built in Milestone M2"
-      plannedItems={[
-        "Paste job description (required, 300–15,000 characters)",
-        "Job title and company (optional)",
-        "Original job link (optional)",
-        "Summary of the profile being used, with an Edit link",
-        "Analyse fit button with progress steps",
-      ]}
-      back={{ href: "/profile", label: "Professional Profile" }}
-      next={{ href: "/opportunity/preview", label: "Preview analysis screen" }}
-    />
+    <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
+      <JourneySteps current={[2]} />
+
+      <div className="mt-8 sm:mt-10">
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Add Job Description</h1>
+        <p className="mt-2 max-w-2xl text-muted">
+          Paste a job you&apos;re interested in. We&apos;ll compare its requirements with your profile and show where you
+          match, what&apos;s missing and what to clarify.
+        </p>
+      </div>
+
+      <AddJobScreen />
+    </div>
   );
 }

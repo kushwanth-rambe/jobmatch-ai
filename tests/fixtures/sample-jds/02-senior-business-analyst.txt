@@ -1,0 +1,28 @@
+Senior Business Analyst – Lending Platform
+Bluefinch Bank · Pune, India (On-site)
+
+Bluefinch Bank is modernising its retail lending platform. We are hiring a Senior Business Analyst to bridge business teams and technology during a multi-year transformation programme.
+
+Key responsibilities
+- Lead requirements workshops with lending, risk and operations teams.
+- Document business requirements, process maps (BPMN) and acceptance criteria.
+- Analyse current-state processes and recommend improvements.
+- Write and maintain user stories and support the product owner with backlog refinement.
+- Support user acceptance testing (UAT) and help resolve defects.
+- Produce data analysis using SQL and Excel to support decisions.
+
+Required qualifications
+- Minimum 6 years of experience as a Business Analyst, with at least 2 years in a senior role.
+- Strong experience in requirements gathering, process mapping and stakeholder management.
+- Experience working in Agile/Scrum teams using Jira and Confluence.
+- Good SQL skills.
+- Bachelor's degree in business, finance, computer science or a related field.
+
+Preferred
+- Experience in banking, lending or credit risk.
+- CBAP or PMI-PBA certification.
+- Exposure to regulatory reporting.
+
+The successful candidate will be expected to handle other duties as required by the programme and to travel occasionally between our offices.
+
+We offer a structured career path, annual bonus and hybrid working after the first six months. Bluefinch Bank values diversity and welcomes applications from all backgrounds.

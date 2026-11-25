@@ -1,0 +1,28 @@
+AI Product Manager – Customer Support Automation
+Lumen Labs · Remote (India time zones)
+
+Lumen Labs builds AI assistants that help support teams resolve tickets faster. We are looking for an AI Product Manager to lead our generative-AI features from idea to launch.
+
+Responsibilities
+- Define the vision and roadmap for our LLM-powered support assistant.
+- Translate customer problems into AI product requirements, including evaluation criteria and quality metrics.
+- Work closely with ML engineers to choose between prompting, retrieval-augmented generation (RAG) and fine-tuning approaches.
+- Set up evaluation frameworks to measure answer quality, hallucination rate and cost per conversation.
+- Partner with legal and security teams on responsible AI, data privacy and model risk.
+- Launch features, measure adoption and iterate based on data.
+
+Requirements
+- 5–8 years of product management experience, including at least 2 years shipping AI or machine-learning products.
+- Strong understanding of large language models, prompt design and RAG.
+- Experience defining metrics and running experiments (A/B tests).
+- Ability to read and discuss technical documents with engineers; Python or SQL is required for working with data.
+- Excellent written communication and stakeholder management.
+
+Bonus points
+- Experience with B2B SaaS or customer support tools.
+- Familiarity with AI evaluation tools and observability platforms.
+- A track record of building 0-to-1 products.
+
+We are looking for a visionary leader who can deliver world-class AI experiences at startup speed.
+
+Benefits: fully remote, home-office budget, stock options and a yearly team retreat. Lumen Labs is an equal opportunity employer.

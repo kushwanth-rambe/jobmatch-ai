@@ -44,6 +44,9 @@ export type Requirement = {
 
 export type AlignmentLevel = "strong" | "partial" | "limited";
 
+export type ExperienceStatus = "below" | "meets" | "exceeds" | "not_specified";
+export type LocationStatus = "aligned" | "partial" | "not_aligned" | "unclear";
+
 /** Validated JobMatch Analysis result plus the values computed by app code (spec §6.4–6.5). */
 export type Analysis = {
   job: {
@@ -56,14 +59,8 @@ export type Analysis = {
     requiredYearsMax: number | null;
   };
   requirements: Requirement[];
-  experienceAlignment: {
-    status: "below" | "meets" | "exceeds" | "not_specified";
-    explanation: string;
-  };
-  locationAlignment: {
-    status: "aligned" | "partial" | "not_aligned" | "unclear";
-    explanation: string;
-  };
+  experienceAlignment: { status: ExperienceStatus; explanation: string };
+  locationAlignment: { status: LocationStatus; explanation: string };
   toClarify: { requirement: string; reason: string; suggestedQuestion: string }[];
   summary: string;
   /** Computed by app code, never by the AI. */
@@ -72,7 +69,11 @@ export type Analysis = {
   mustHaveTotal: number;
   niceToHaveMatched: number;
   niceToHaveTotal: number;
+  /** How many AI "matched" items the grounding check moved to "unproven". */
+  groundingDowngrades: number;
+  model: string;
   promptVersion: string;
+  analysedAt: string;
 };
 
 export type OpportunityStatus = "analysed" | "saved" | "applied";
@@ -88,6 +89,10 @@ export type Opportunity = {
   status: OpportunityStatus;
   appliedAt: string | null;
   inputHash: string;
+  /** The job description exactly as pasted, kept for review. */
+  jobDescription: string;
+  /** The profile the analysis was based on. */
+  profileSnapshot: Omit<Profile, "updatedAt">;
   analysis: Analysis;
   createdAt: string;
 };

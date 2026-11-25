@@ -1,0 +1,29 @@
+Product Manager – Checkout & Payments
+Northwind Commerce · Bengaluru, India (Hybrid – 3 days a week in office)
+
+About the role
+Northwind Commerce runs an online marketplace used by 4 million shoppers. We are looking for a Product Manager to own the checkout and payments experience. You will work with a cross-functional squad of six engineers, a designer and a data analyst to reduce checkout drop-off and launch new payment methods.
+
+What you will do
+- Own the checkout roadmap and prioritise the backlog with the engineering lead.
+- Run discovery with customers and turn insights into clear product requirements and user stories.
+- Design and analyse A/B tests to improve conversion.
+- Work with stakeholders in finance, legal and customer support to launch new payment methods.
+- Define success metrics and report progress to leadership every month.
+
+What you need (required)
+- 3–5 years of experience in product management, or in a closely related role such as business analysis with strong product exposure.
+- Proven experience writing product requirements and user stories in Jira or a similar tool.
+- Strong analytical skills, including SQL, to answer your own data questions.
+- Hands-on experience running A/B tests or other experiments.
+- Excellent stakeholder management and communication skills.
+
+Nice to have
+- Experience with payments, fintech or e-commerce checkout.
+- Familiarity with product analytics tools such as Amplitude or Mixpanel.
+- Experience working with design tools like Figma.
+
+You should also be comfortable with ambiguity and able to wear many hats in a fast-paced environment.
+
+What we offer
+Competitive salary, health insurance for you and your family, a learning budget and flexible working hours. Northwind Commerce is an equal opportunity employer.
