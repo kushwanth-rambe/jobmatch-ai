@@ -55,7 +55,7 @@ export const aiAnalysisSchema = z.object({
       suggested_question: text,
     }),
   ),
-  summary: text.describe("2-3 sentences: why it fits and why not. Strengths first, then gaps."),
+  summary: text.describe("Max 3 short sentences, under 60 words, addressed to \"you\": strengths first, then gaps."),
 });
 
 export type AiAnalysis = z.infer<typeof aiAnalysisSchema>;

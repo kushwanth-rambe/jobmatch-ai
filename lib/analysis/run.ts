@@ -72,12 +72,22 @@ export function parseAiReply(text: string | undefined) {
 
 export type RunResult = { analysis: Analysis; usage: TokenUsage; calls: number };
 
+/** A quick "service unavailable" reply (Google overload) is retried once after this pause. */
+export const TRANSIENT_RETRY_DELAY_MS = 1500;
+/** Only retry if the failed call came back within this time, so the route stays inside its time limit. */
+export const TRANSIENT_RETRY_WINDOW_MS = 10_000;
+
 export async function runAnalysis(input: {
   profile: Omit<Profile, "updatedAt">;
   job: JobInput;
   model: string;
   generate: GenerateFn;
+  /** For tests: replace the clock and the pause. */
+  now?: () => number;
+  sleep?: (ms: number) => Promise<void>;
 }): Promise<RunResult> {
+  const now = input.now ?? Date.now;
+  const sleep = input.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
   const profile = analysisProfile(input.profile);
   const description = normaliseForAnalysis(input.job.description);
   const request: GenerateRequest = {
@@ -94,7 +104,19 @@ export async function runAnalysis(input: {
   let calls = 0;
   while (calls < MAX_ATTEMPTS) {
     calls += 1;
-    const reply = await input.generate(request); // network/API errors are thrown as AnalysisError
+    const started = now();
+    let reply: GenerateResult;
+    try {
+      reply = await input.generate(request);
+    } catch (error) {
+      // Google overloaded (503) and answered quickly: no tokens were used, so try once more.
+      const transient = error instanceof AnalysisError && error.code === "ai_unavailable";
+      if (transient && calls < MAX_ATTEMPTS && now() - started < TRANSIENT_RETRY_WINDOW_MS) {
+        await sleep(TRANSIENT_RETRY_DELAY_MS);
+        continue;
+      }
+      throw Object.assign(error instanceof AnalysisError ? error : new AnalysisError("ai_unavailable"), { usage, calls });
+    }
     usage = addUsage(usage, reply.usage);
     const ai = parseAiReply(reply.text);
     if (!ai) continue; // unusable reply → one retry

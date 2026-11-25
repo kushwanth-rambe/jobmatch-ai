@@ -49,7 +49,7 @@ Server-side only — never prefix them with `NEXT_PUBLIC_`. See [`.env.example`]
 |---|---|---|
 | `GEMINI_API_KEY` | Yes, for analysis | Google AI Studio API key. Without it the app still runs and shows a clear "not set up" message instead of analysing. |
 | `GEMINI_MODEL` | No | Defaults to `gemini-3.1-flash-lite`. Change it to compare models. |
-| `GEMINI_THINKING_LEVEL` | No | `minimal`, `low`, `medium` or `high`. Defaults to `low`. |
+| `GEMINI_THINKING_LEVEL` | No | `minimal`, `low`, `medium` or `high`. Defaults to `minimal` (same quality as `low` in testing, lower and more predictable cost). |
 
 For local development put them in `.env.local` (ignored by Git). On Vercel add them under **Project → Settings → Environment Variables**.
 

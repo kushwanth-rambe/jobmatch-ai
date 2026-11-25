@@ -29,7 +29,7 @@ export function readGeminiConfig(): GeminiConfig {
   return {
     apiKey: process.env.GEMINI_API_KEY?.trim() || null,
     model: process.env.GEMINI_MODEL?.trim() || DEFAULT_MODEL,
-    thinkingLevel: level in THINKING_LEVELS ? level : "low",
+    thinkingLevel: level in THINKING_LEVELS ? level : "minimal",
   };
 }
 
@@ -63,7 +63,7 @@ export function createGeminiGenerate(config: { apiKey: string; model: string; th
           responseMimeType: "application/json",
           responseJsonSchema: req.responseSchema,
           maxOutputTokens: MAX_OUTPUT_TOKENS,
-          thinkingConfig: { thinkingLevel: THINKING_LEVELS[config.thinkingLevel] ?? ThinkingLevel.LOW },
+          thinkingConfig: { thinkingLevel: THINKING_LEVELS[config.thinkingLevel] ?? ThinkingLevel.MINIMAL },
           httpOptions: { timeout: CALL_TIMEOUT_MS },
         },
       });

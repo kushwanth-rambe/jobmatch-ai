@@ -107,7 +107,7 @@ describe("no hiring predictions (AC-A4)", () => {
     assert.equal(containsPrediction(a.experienceAlignment.explanation), false);
   });
   it("the prompt forbids predictions and invented qualifications", () => {
-    assert.match(SYSTEM_INSTRUCTION, /NEVER predict hiring outcomes/);
+    assert.match(SYSTEM_INSTRUCTION, /NEVER predict or speculate about hiring outcomes/);
     assert.match(SYSTEM_INSTRUCTION, /NEVER assume, infer or invent/);
   });
 });
@@ -197,5 +197,57 @@ describe("cost from measured tokens", () => {
   });
   it("returns null (not a guess) for a model without a listed price", () => {
     assert.equal(costUsd("some-other-model", USAGE), null);
+  });
+});
+
+describe("m2-v2 refinements", () => {
+  const job = { description: JD, title: null, company: null, link: null };
+  it("retries once, after a short pause, when Google is briefly overloaded", async () => {
+    let calls = 0;
+    const pauses: number[] = [];
+    const generate: GenerateFn = async () => {
+      calls += 1;
+      if (calls === 1) throw new AnalysisError("ai_unavailable", "Gemini HTTP 503");
+      return { text: JSON.stringify(aiReply()), usage: USAGE };
+    };
+    const result = await runAnalysis({ profile: PROFILE, job, model: "m", generate, sleep: async (ms) => void pauses.push(ms) });
+    assert.equal(calls, 2);
+    assert.equal(result.calls, 2);
+    assert.deepEqual(result.usage, USAGE, "the failed call used no tokens");
+    assert.deepEqual(pauses, [1500]);
+  });
+  it("does not retry a slow failure (keeps the request inside its time limit)", async () => {
+    let t = 0;
+    let calls = 0;
+    const generate: GenerateFn = async () => {
+      calls += 1;
+      t += 20_000;
+      throw new AnalysisError("ai_unavailable", "Gemini HTTP 504");
+    };
+    await assert.rejects(
+      runAnalysis({ profile: PROFILE, job, model: "m", generate, now: () => t, sleep: async () => {} }),
+      (e: AnalysisError) => e.code === "ai_unavailable",
+    );
+    assert.equal(calls, 1);
+  });
+  it("gives up after the retry if Google is still overloaded", async () => {
+    let calls = 0;
+    const generate: GenerateFn = async () => {
+      calls += 1;
+      throw new AnalysisError("ai_unavailable", "Gemini HTTP 503");
+    };
+    await assert.rejects(runAnalysis({ profile: PROFILE, job, model: "m", generate, sleep: async () => {} }));
+    assert.equal(calls, 2);
+  });
+  it("treats speculation about candidacy or the employer's willingness as prediction language", () => {
+    assert.ok(containsPrediction("Successful candidacy would depend on training."));
+    assert.ok(containsPrediction("It depends on the company's willingness to train you."));
+    assert.ok(containsPrediction("You may not be shortlisted."));
+    assert.equal(containsPrediction("Your SQL and A/B testing experience line up with the job."), false);
+  });
+  it("shortens long text at a full sentence instead of mid-sentence", async () => {
+    const { truncate } = await import("../lib/analysis/postprocess.ts");
+    const text = "Your SQL lines up well. Your A/B testing lines up too. The main gap is roadmap ownership and analytics tools like Amplitude.";
+    assert.equal(truncate(text, 60), "Your SQL lines up well. Your A/B testing lines up too.");
   });
 });

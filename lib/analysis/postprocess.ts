@@ -78,7 +78,7 @@ export function isGrounded(evidence: string | null, profile: Omit<Profile, "upda
 }
 
 const PREDICTION_PATTERN =
-  /\b(chances?|odds|likelihood|probabilit(?:y|ies)|probable|guarantee[ds]?|likely to (?:be|get) (?:hired|selected|shortlisted|an? (?:offer|interview))|you (?:will|would) (?:be hired|get (?:the|this) (?:job|role|offer))|hiring success rate)\b|\d{1,3}(?:\.\d+)?\s?%/i;
+  /\b(chances?|odds|likelihood|probabilit(?:y|ies)|probable|guarantee[ds]?|candidacy|likely to (?:be|get) (?:hired|selected|shortlisted|an? (?:offer|interview))|(?:get|be|being|getting) (?:hired|shortlisted|selected)|you (?:will|would) (?:get (?:the|this) (?:job|role|offer))|willing(?:ness)? to (?:hire|consider|train|accept)|hiring success rate)\b|\d{1,3}(?:\.\d+)?\s?%/i;
 
 /** True when text sounds like a hiring prediction or a percentage score (AC-A4). */
 export function containsPrediction(text: string): boolean {
@@ -88,6 +88,14 @@ export function containsPrediction(text: string): boolean {
 export function truncate(text: string, max: number): string {
   const t = text.replace(/\s+/g, " ").trim();
   if (t.length <= max) return t;
+  // Prefer ending at a full sentence so text is never cut mid-thought.
+  const sentences = t.match(/[^.!?]+[.!?]+(?:\s|$)/g) ?? [];
+  let kept = "";
+  for (const sentence of sentences) {
+    if ((kept + sentence).trim().length > max) break;
+    kept += sentence;
+  }
+  if (kept.trim().length >= max * 0.5) return kept.trim();
   const cut = t.slice(0, max - 1);
   const lastSpace = cut.lastIndexOf(" ");
   return (lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).trimEnd() + "…";
