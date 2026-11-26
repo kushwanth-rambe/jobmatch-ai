@@ -1,7 +1,7 @@
 /**
  * The one Release 1 journey (spec §0.1):
  * Professional Profile → Add Job Description → JobMatch Analysis → Application Decision.
- * Steps 3 and 4 share one page (spec §4, Screen 4).
+ * Steps 3 and 4 are separate pages: /opportunity/[id] and /opportunity/[id]/decision.
  */
 export const JOURNEY_STEPS = [
   { number: 1, label: "Professional Profile", shortLabel: "Profile" },

@@ -26,6 +26,12 @@ const opp = (id: string, status: Opportunity["status"] = "analysed"): Opportunit
   createdAt: "2026-11-25T00:00:00.000Z",
 });
 
+function added(list: Opportunity[], item: Opportunity, max?: number): Opportunity[] {
+  const result = addOpportunity(list, item, max);
+  assert.ok(result.ok);
+  return result.list;
+}
+
 describe("opportunities", () => {
   it("round-trips through JSON and keeps the original job description", () => {
     const list = parseOpportunities(JSON.stringify([opp("a")]));
@@ -44,13 +50,13 @@ describe("opportunities", () => {
     assert.equal(findByCacheKey(list, "hash-z"), undefined);
   });
   it("adds newest first and replaces an item with the same id", () => {
-    const list = addOpportunity(addOpportunity([], opp("a")), opp("b"));
+    const list = added(added([], opp("a")), opp("b"));
     assert.deepEqual(list.map((o) => o.id), ["b", "a"]);
-    assert.equal(addOpportunity(list, opp("a")).length, 2);
+    assert.equal(added(list, opp("a")).length, 2);
   });
   it("prunes the oldest analysed-only item first, keeping saved or applied jobs", () => {
     const list = [opp("new"), opp("saved", "saved"), opp("old"), opp("applied", "applied")];
-    const pruned = addOpportunity(list.slice(1), list[0], 3);
+    const pruned = added(list.slice(1), list[0], 3);
     assert.deepEqual(pruned.map((o) => o.id), ["new", "saved", "applied"]);
   });
 });

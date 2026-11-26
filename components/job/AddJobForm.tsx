@@ -15,13 +15,17 @@ import {
 } from "@/lib/job";
 import {
   findByCacheKey,
+  hasRoomForNew,
+  keptCount,
   newOpportunityId,
   parseOpportunities,
   readJobDraft,
   readOpportunitiesRaw,
   storeOpportunity,
+  subscribeToOpportunities,
   writeJobDraft,
 } from "@/lib/opportunities";
+import { StorageWarning } from "@/components/opportunities/OpportunityList";
 import { parseStoredProfile, readProfileRaw, subscribeToProfile } from "@/lib/profile";
 import type { Analysis, Opportunity, Profile } from "@/lib/types";
 
@@ -70,6 +74,9 @@ function AddJobForm({ profile }: { profile: Profile }) {
   const [analysing, setAnalysing] = useState(false);
   const [step, setStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [storageFull, setStorageFull] = useState(false);
+  const storedRaw = useSyncExternalStore<string | null | undefined>(subscribeToOpportunities, readOpportunitiesRaw, serverSnapshot);
+  const kept = keptCount(parseOpportunities(storedRaw ?? null));
 
   const { errors, job } = validateJobDraft(draft);
   const length = draft.description.trim().length;
@@ -83,6 +90,7 @@ function AddJobForm({ profile }: { profile: Profile }) {
       setAnalysing(false);
       setStep(0);
       setError(null);
+      setStorageFull(false);
       setTouched(new Set());
       setDraft(readJobDraft() ?? EMPTY_JOB_DRAFT);
     };
@@ -100,6 +108,7 @@ function AddJobForm({ profile }: { profile: Profile }) {
     setDraft(next);
     writeJobDraft(next);
     setError(null);
+    setStorageFull(false);
   }
 
   function touch(field: JobField) {
@@ -114,13 +123,23 @@ function AddJobForm({ profile }: { profile: Profile }) {
     setAnalysing(true);
     setStep(0);
     setError(null);
+    setStorageFull(false);
     try {
       // 1. Same profile + same job description analysed before? Reuse it — no API call.
       const inputHash = await analysisCacheKey(profile, job.description, PROMPT_VERSION);
-      const cached = findByCacheKey(parseOpportunities(readOpportunitiesRaw()), inputHash);
+      const stored = parseOpportunities(readOpportunitiesRaw());
+      const cached = findByCacheKey(stored, inputHash);
       if (cached) {
         writeJobDraft(null);
         router.push(`/opportunity/${cached.id}?reused=1`);
+        return;
+      }
+
+      // Only saved/applied jobs left and no free slot: ask the user to decide what to delete
+      // before spending an API call. Saved and applied jobs are never deleted automatically.
+      if (!hasRoomForNew(stored)) {
+        setStorageFull(true);
+        setAnalysing(false);
         return;
       }
 
@@ -158,8 +177,13 @@ function AddJobForm({ profile }: { profile: Profile }) {
         analysis: data.analysis,
         createdAt: new Date().toISOString(),
       };
-      if (!storeOpportunity(opportunity)) {
-        setError("Your browser didn't allow the analysis to be saved, so it can't be shown. Check that site data isn't blocked and try again.");
+      const saved = storeOpportunity(opportunity);
+      if (!saved.ok) {
+        if (saved.reason === "full") setStorageFull(true);
+        else
+          setError(
+            "Your browser didn't allow the analysis to be saved, so it can't be shown. Its storage may be full or blocked — try deleting jobs you no longer need in My opportunities.",
+          );
         setAnalysing(false);
         return;
       }
@@ -291,6 +315,20 @@ function AddJobForm({ profile }: { profile: Profile }) {
       </fieldset>
 
       <div className="mt-6">
+        {storageFull ? (
+          <div role="alert" className="mb-4 rounded-xl border border-accent/40 bg-accent-soft p-4 text-sm">
+            <p className="font-medium text-foreground">There&apos;s no room to store a new analysis.</p>
+            <p className="mt-1 text-muted">
+              All {kept} stored jobs are saved or applied, and JobMatch never deletes those automatically. Delete one you no
+              longer need, then analyse this job — your text is kept.
+            </p>
+            <Link href="/opportunities" className="mt-2 inline-block font-medium text-brand hover:underline">
+              Go to My opportunities →
+            </Link>
+          </div>
+        ) : (
+          <StorageWarning kept={kept} />
+        )}
         {error && (
           <p role="alert" className="mb-4 rounded-lg bg-red-50 px-3.5 py-2.5 text-sm font-medium text-red-700 dark:bg-red-950/40 dark:text-red-300">
             {error}

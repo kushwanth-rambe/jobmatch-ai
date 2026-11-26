@@ -2,48 +2,31 @@
 
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { useSyncExternalStore, type ReactNode } from "react";
-import { parseOpportunities, readOpportunitiesRaw, subscribeToOpportunities } from "@/lib/opportunities";
-import type { AlignmentLevel, Analysis, ExperienceStatus, LocationStatus, Opportunity, Requirement } from "@/lib/types";
+import type { ReactNode } from "react";
+import type { Analysis, ExperienceStatus, LocationStatus, Opportunity, Requirement } from "@/lib/types";
+import {
+  DISCLAIMER,
+  LevelBadge,
+  LoadingLine,
+  NotFound,
+  StatusBadge,
+  buttonClass,
+  formatDate,
+  jobMeta,
+  jobTitle,
+  useOpportunities,
+} from "@/components/opportunities/shared";
 
-const serverSnapshot = () => undefined;
-
-export const DISCLAIMER = "This compares your profile with the job description. It is not a prediction of hiring success.";
-
-/** Loads the analysed job from this browser by its id. */
+/** Step 3 · JobMatch Analysis. Loads the analysed job from this browser by its id (no AI call). */
 export function AnalysisView() {
   const { id } = useParams<{ id: string }>();
   const reused = useSearchParams().get("reused") === "1";
-  const raw = useSyncExternalStore<string | null | undefined>(subscribeToOpportunities, readOpportunitiesRaw, serverSnapshot);
-  if (raw === undefined) return <p className="mt-8 text-sm text-subtle" aria-busy="true">Loading your analysis…</p>;
-  const opportunity = parseOpportunities(raw).find((o) => o.id === id);
+  const list = useOpportunities();
+  if (list === undefined) return <LoadingLine text="Loading your analysis…" />;
+  const opportunity = list.find((o) => o.id === id);
   if (!opportunity) return <NotFound />;
   return <AnalysisResult opportunity={opportunity} reused={reused} />;
 }
-
-function NotFound() {
-  return (
-    <div className="mt-8 rounded-2xl border border-border bg-surface p-6 sm:p-8">
-      <h1 className="text-xl font-semibold">We couldn&apos;t find this analysis on this device</h1>
-      <p className="mt-2 text-muted">
-        Analyses are saved only in the browser where they were created. It may have been made on another device or
-        browser, or the browser&apos;s site data was cleared.
-      </p>
-      <Link
-        href="/analyze"
-        className="mt-5 inline-flex h-11 items-center justify-center rounded-lg bg-brand px-5 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand-strong"
-      >
-        Analyse a job →
-      </Link>
-    </div>
-  );
-}
-
-const LEVEL: Record<AlignmentLevel, { label: string; tone: string; dot: string }> = {
-  strong: { label: "Strong alignment", tone: "border-brand/40 bg-brand-soft text-brand-strong", dot: "bg-brand" },
-  partial: { label: "Partial alignment", tone: "border-accent/40 bg-accent-soft text-accent", dot: "bg-accent" },
-  limited: { label: "Limited alignment", tone: "border-border bg-surface-muted text-muted", dot: "bg-subtle" },
-};
 
 const EXPERIENCE_LABEL: Record<ExperienceStatus, string> = {
   below: "Below the level asked",
@@ -59,8 +42,6 @@ const LOCATION_LABEL: Record<LocationStatus, string> = {
   unclear: "Not clear from the job description",
 };
 
-const WORK_MODE_LABEL: Record<string, string> = { onsite: "On-site", hybrid: "Hybrid", remote: "Remote" };
-
 const byImportance = (a: Requirement, b: Requirement) =>
   a.importance === b.importance ? 0 : a.importance === "must_have" ? -1 : 1;
 
@@ -69,12 +50,10 @@ function AnalysisResult({ opportunity, reused }: { opportunity: Opportunity; reu
   const matched = a.requirements.filter((r) => r.status === "matched").sort(byImportance);
   const unproven = a.requirements.filter((r) => r.status === "unproven").sort(byImportance);
   const missing = a.requirements.filter((r) => r.status === "missing").sort(byImportance);
-  const title = opportunity.jobTitle ?? a.job.title ?? "Untitled job";
-  const company = opportunity.company ?? a.job.company;
-  const meta = [company, opportunity.location ?? a.job.location, a.job.workMode ? WORK_MODE_LABEL[a.job.workMode] : null]
-    .filter(Boolean)
-    .join(" · ");
+  const title = jobTitle(opportunity);
+  const meta = jobMeta(opportunity);
   const p = opportunity.profileSnapshot;
+  const decisionHref = `/opportunity/${opportunity.id}/decision`;
 
   return (
     <article className="mt-8 sm:mt-10">
@@ -82,6 +61,12 @@ function AnalysisResult({ opportunity, reused }: { opportunity: Opportunity; reu
         <p className="text-sm font-medium text-brand">JobMatch Analysis</p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
         {meta && <p className="mt-1.5 text-muted">{meta}</p>}
+        {opportunity.status !== "analysed" && (
+          <p className="mt-2.5 flex flex-wrap items-center gap-2 text-sm">
+            <StatusBadge status={opportunity.status} />
+            {opportunity.status === "applied" && <span className="text-subtle">on {formatDate(opportunity.appliedAt)}</span>}
+          </p>
+        )}
         <p className="mt-2 text-sm text-subtle">
           Analysed {formatDate(a.analysedAt)} · compared with your profile: {p.currentRole} → {p.targetRole},{" "}
           {p.yearsExperience} yrs, {p.skills.length} skills
@@ -89,12 +74,19 @@ function AnalysisResult({ opportunity, reused }: { opportunity: Opportunity; reu
         {reused && (
           <p className="mt-3 rounded-lg border border-border bg-surface px-3.5 py-2.5 text-sm text-muted">
             You&apos;ve already analysed this job with the same profile, so we&apos;re showing the saved result — no new
-            analysis was needed.
+            analysis was needed{opportunity.status !== "analysed" ? " (it's already in My opportunities)" : ""}.
           </p>
         )}
       </header>
 
       <SummaryCard analysis={a} />
+
+      <p className="mt-3 text-sm text-subtle">
+        Ready to decide?{" "}
+        <Link href={decisionHref} className="font-medium text-brand hover:underline">
+          Go to Application Decision →
+        </Link>
+      </p>
 
       <div className="mt-6 grid gap-4">
         <Section
@@ -182,23 +174,17 @@ function AnalysisResult({ opportunity, reused }: { opportunity: Opportunity; reu
         </details>
       </div>
 
-      <div className="mt-6 rounded-2xl border border-dashed border-border bg-surface p-5 text-sm text-muted">
-        <span className="font-medium text-foreground">Next: your application decision.</span> Saving this job, marking it as
-        applied and opening the original listing arrive in the next update (M3).
-      </div>
-
-      <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
-        <Link
-          href="/profile"
-          className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-surface px-5 text-sm font-medium transition-colors hover:bg-surface-muted"
-        >
-          Edit profile
-        </Link>
-        <Link
-          href="/analyze"
-          className="inline-flex h-11 items-center justify-center rounded-lg bg-brand px-5 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand-strong"
-        >
-          Analyse another job →
+      <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col-reverse gap-3 sm:flex-row">
+          <Link href="/profile" className={buttonClass.quiet}>
+            Edit profile
+          </Link>
+          <Link href="/analyze" className={buttonClass.secondary}>
+            Analyse another job
+          </Link>
+        </div>
+        <Link href={decisionHref} className={buttonClass.primary}>
+          Continue to Application Decision →
         </Link>
       </div>
     </article>
@@ -206,7 +192,6 @@ function AnalysisResult({ opportunity, reused }: { opportunity: Opportunity; reu
 }
 
 function SummaryCard({ analysis: a }: { analysis: Analysis }) {
-  const level = LEVEL[a.alignmentLevel];
   const usesMust = a.mustHaveTotal > 0;
   const basisMatched = usesMust ? a.mustHaveMatched : a.requirements.filter((r) => r.status === "matched").length;
   const basisTotal = usesMust ? a.mustHaveTotal : a.requirements.length;
@@ -217,10 +202,7 @@ function SummaryCard({ analysis: a }: { analysis: Analysis }) {
         Summary
       </h2>
       <div className="flex flex-wrap items-center gap-3">
-        <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold ${level.tone}`}>
-          <span className={`h-2 w-2 rounded-full ${level.dot}`} aria-hidden="true" />
-          {level.label}
-        </span>
+        <LevelBadge level={a.alignmentLevel} />
       </div>
       <p className="mt-4 text-base">
         Your profile shows{" "}
@@ -356,9 +338,4 @@ function yearsAsked(a: Analysis): string {
   if (min !== null) return `${min}+ years`;
   if (max !== null) return `Up to ${max} years`;
   return "Not specified";
-}
-
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? "recently" : d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }

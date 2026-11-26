@@ -246,6 +246,17 @@ export function saveProfile(profile: Omit<Profile, "updatedAt">): Profile | null
   return saved;
 }
 
+/** Deletes the saved profile from this browser ("Clear this device"). */
+export function clearProfile(): boolean {
+  try {
+    window.localStorage.removeItem(PROFILE_STORAGE_KEY);
+  } catch {
+    return false;
+  }
+  listeners.forEach((l) => l());
+  return true;
+}
+
 /** Lets React re-read storage when the profile changes (this tab or another tab). */
 export function subscribeToProfile(onChange: () => void): () => void {
   listeners.add(onChange);

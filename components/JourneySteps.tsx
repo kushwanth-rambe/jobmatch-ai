@@ -1,7 +1,7 @@
 import { JOURNEY_STEPS, type JourneyStepNumber } from "@/lib/journey";
 
 type Props = {
-  /** The step(s) shown on the current page. Analysis & Decision share a page, so pass [3, 4]. */
+  /** The step(s) shown on the current page, e.g. [4] on the Application Decision page. */
   current: JourneyStepNumber[];
 };
 

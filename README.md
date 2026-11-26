@@ -8,14 +8,16 @@ The product specification is in [`JOBMATCH_AI_PRODUCT_SPEC.md`](./JOBMATCH_AI_PR
 
 ## Status
 
-**Release 1 · Milestone M2 — Add Job Description and JobMatch Analysis.**
+**Release 1 · Milestones M2 + M3 — JobMatch Analysis and Application Decision.**
 
 | Route | Screen | Built in |
 |---|---|---|
 | `/` | Landing page | M0 ✅ |
 | `/profile` | Step 1 · Professional Profile (saved in this browser) | M1 ✅ |
 | `/analyze` | Step 2 · Add Job Description (paste text) | M2 ✅ |
-| `/opportunity/[id]` | Steps 3 & 4 · JobMatch Analysis & Application Decision | M2 ✅ analysis · M3 decision |
+| `/opportunity/[id]` | Step 3 · JobMatch Analysis | M2 ✅ |
+| `/opportunity/[id]/decision` | Step 4 · Application Decision: summary, original job link, Save / Mark as applied | M3 ✅ |
+| `/opportunities` | My opportunities: saved and applied jobs, Delete, Clear this device | M3 ✅ |
 | `/api/analyze` | Server route that calls Gemini (API key stays on the server) | M2 ✅ |
 
 Public job-URL fetching is planned for M5; M2 uses pasted job descriptions only.
@@ -29,6 +31,12 @@ Public job-URL fetching is planned for M5; M2 uses pasted job descriptions only.
 5. The result and the original job description are saved in the browser only.
 
 The analysis compares the profile with the job description. It never predicts hiring success.
+
+## Application decision and storage
+
+- Save, Mark as applied (with today's date), Undo, Delete and Clear this device work entirely in the browser — **no API calls**.
+- Up to 50 analysed jobs are kept in `localStorage`. To make room, only the oldest jobs that were **not** saved or applied are removed. Saved and Applied jobs are never removed automatically: when storage is full of them, the app warns you and asks you to delete one before analysing a new job (no API call is made).
+- **Clear this device** (on My opportunities) deletes the profile, all analysed jobs and any unsent job text, after confirmation.
 
 ## Tech stack
 
@@ -95,12 +103,17 @@ app/
   page.tsx                    Landing page
   profile/page.tsx            Step 1 · Professional Profile
   analyze/page.tsx            Step 2 · Add Job Description
-  opportunity/[id]/page.tsx   Steps 3 & 4 · Analysis (Decision in M3)
+  opportunity/[id]/page.tsx   Step 3 · JobMatch Analysis
+  opportunity/[id]/decision/  Step 4 · Application Decision
+  opportunities/page.tsx      My opportunities
   api/analyze/route.ts        Server route: runs one analysis
 components/
   profile/ProfileForm.tsx     Profile form
   job/AddJobForm.tsx          Job description form
   analysis/AnalysisView.tsx   Analysis results
+  decision/DecisionView.tsx   Application Decision
+  opportunities/              My opportunities list and shared pieces
+  ConfirmButton.tsx           "Are you sure?" dialog for delete / clear
   JourneySteps.tsx, SiteHeader.tsx, SiteFooter.tsx, Logo.tsx
 lib/
   profile.ts                  Profile rules and browser storage

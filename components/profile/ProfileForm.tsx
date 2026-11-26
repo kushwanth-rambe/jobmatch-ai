@@ -67,6 +67,20 @@ function ProfileForm({ saved }: { saved: Profile | null }) {
   const [skillMessage, setSkillMessage] = useState<string | null>(null);
   const [status, setStatus] = useState<{ tone: "success" | "error"; text: string } | null>(null);
 
+  // "Clear this device" deleted the saved profile while this page was kept alive: start empty.
+  const savedAt = saved?.updatedAt ?? null;
+  const [lastSavedAt, setLastSavedAt] = useState(savedAt);
+  if (savedAt !== lastSavedAt) {
+    setLastSavedAt(savedAt);
+    if (lastSavedAt && !savedAt) {
+      setDraft(EMPTY_DRAFT);
+      setTouched(new Set());
+      setSkillInput("");
+      setSkillMessage(null);
+      setStatus(null);
+    }
+  }
+
   const { errors, profile } = validateDraft(draft);
   const isValid = profile !== null;
   const hasUnsavedChanges = saved ? !sameProfile(profile, saved) : true;
@@ -315,7 +329,11 @@ function ProfileForm({ saved }: { saved: Profile | null }) {
 
         <p className="mt-4 rounded-lg bg-surface-muted px-3.5 py-2.5 text-xs leading-relaxed text-muted">
           Please don&apos;t enter sensitive personal details such as ID numbers, your home address or phone number.
-          Your profile is stored only in this browser.
+          Your profile is stored only in this browser. You can delete it at any time with{" "}
+          <Link href="/opportunities#device" className="font-medium text-brand hover:underline">
+            Clear this device
+          </Link>
+          .
         </p>
       </div>
 

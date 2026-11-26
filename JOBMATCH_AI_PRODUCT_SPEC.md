@@ -310,6 +310,8 @@ Release 1 has **5 screens**: Landing, Profile, Add Job, Analysis & Decision, My 
 
 This screen combines MVP requirements 3 and 4 into one decision page.
 
+> **Implementation note (M3):** at the product owner's request, the Application Decision is built as its own page after the analysis (`/opportunity/[id]` → `/opportunity/[id]/decision`), keeping the same four-step journey. The requirements below are unchanged.
+
 **Header**
 
 | # | Requirement |
